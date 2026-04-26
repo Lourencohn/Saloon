@@ -28,8 +28,9 @@
     "expo-router": "~3.5.23",
     "expo-secure-store": "~13.0.2",
     "expo-status-bar": "~1.12.1",
+    "expo-updates": "~0.25.28",
     "moti": "^0.29.0",
-    "nativewind": "^4.0.36",
+    "nativewind": "4.1.23",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "~2.16.1",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.79",
+    "eas-cli": "^18.8.1",
     "typescript": "~5.3.3"
   },
   "private": true

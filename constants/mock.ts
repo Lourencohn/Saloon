@@ -1,0 +1,215 @@
+// constants/mock.ts — placeholder data while backend is wired up
+import type { Booking, Category, Professional, Review, Salon, Service } from '@/types/salon';
+
+export const SALONS: Salon[] = [
+  {
+    id: 's1',
+    name: 'Casa Lavanda',
+    tagline: 'Studio de cabelo & coloração autoral',
+    neighborhood: 'Vila Madalena',
+    distance: '1,2 km',
+    rating: 4.9,
+    reviews: 482,
+    price: '$$$',
+    waitTime: 'agora',
+    nextSlot: 'Hoje, 15:30',
+    badges: ['Premium', 'Curadoria Saloon'],
+    photoSeed: 0,
+    favorite: true,
+    bookings: 312,
+    about: 'Studio assinado por Helena Caldeira, referência em loiros naturais e cortes editoriais. Atende com hora marcada em ambiente reservado para até três clientes simultaneamente.',
+    address: 'R. Aspicuelta, 478 — Vila Madalena',
+    hours: 'Seg–Sáb · 09h às 21h',
+  },
+  {
+    id: 's2',
+    name: 'Atelier Âmbar',
+    tagline: 'Beleza integrada — cabelo, unhas, estética',
+    neighborhood: 'Itaim Bibi',
+    distance: '2,4 km',
+    rating: 4.8,
+    reviews: 1207,
+    price: '$$',
+    waitTime: 'em 30min',
+    nextSlot: 'Hoje, 16:00',
+    badges: ['Combo', 'Aceita Pix'],
+    photoSeed: 2,
+    bookings: 891,
+    about: 'Espaço completo com cinco salas privativas. Especialidade em combos de cabelo + unhas no mesmo horário, com profissionais sincronizados.',
+    address: 'R. Joaquim Floriano, 920 — Itaim',
+    hours: 'Ter–Dom · 10h às 22h',
+  },
+  {
+    id: 's3',
+    name: 'Mira Beauty',
+    tagline: 'Unhas artísticas e nail care',
+    neighborhood: 'Pinheiros',
+    distance: '850 m',
+    rating: 4.95,
+    reviews: 644,
+    price: '$$',
+    waitTime: 'amanhã',
+    nextSlot: 'Amanhã, 11:00',
+    badges: ['Nail art'],
+    photoSeed: 4,
+    bookings: 553,
+    about: 'Especializado em alongamento, nail art autoral e spa para mãos. Atendimento individual, agendamento limitado para preservar a qualidade.',
+    address: 'R. dos Pinheiros, 312',
+    hours: 'Seg–Sex · 10h às 20h',
+  },
+  {
+    id: 's4',
+    name: 'Pétala Estética',
+    tagline: 'Skincare clínico & limpeza profunda',
+    neighborhood: 'Jardins',
+    distance: '3,1 km',
+    rating: 4.85,
+    reviews: 298,
+    price: '$$$',
+    waitTime: 'em 2h',
+    nextSlot: 'Hoje, 18:30',
+    badges: ['Estética'],
+    photoSeed: 5,
+    favorite: true,
+    bookings: 207,
+    about: 'Clínica de estética facial com protocolos personalizados. Avaliação inicial gratuita.',
+    address: 'Al. Lorena, 1245 — Jardins',
+    hours: 'Seg–Sáb · 09h às 19h',
+  },
+  {
+    id: 's5',
+    name: 'Studio Mel',
+    tagline: 'Sobrancelhas & cílios',
+    neighborhood: 'Perdizes',
+    distance: '4,5 km',
+    rating: 4.7,
+    reviews: 1842,
+    price: '$',
+    waitTime: 'agora',
+    nextSlot: 'Hoje, 14:45',
+    badges: ['Rápido'],
+    photoSeed: 6,
+    bookings: 1402,
+    about: 'Design de sobrancelhas, henna, brow lamination e extensão de cílios. Atendimento ágil em até 40 minutos.',
+    address: 'R. Cardoso de Almeida, 88',
+    hours: 'Todos os dias · 10h às 21h',
+  },
+];
+
+export const CATEGORIES: Category[] = [
+  { id: 'hair',  label: 'Cabelo',      icon: 'hair'  },
+  { id: 'nails', label: 'Unhas',       icon: 'nail'  },
+  { id: 'face',  label: 'Estética',    icon: 'face'  },
+  { id: 'brow',  label: 'Sobrancelha', icon: 'brow'  },
+  { id: 'lash',  label: 'Cílios',      icon: 'lash'  },
+  { id: 'spa',   label: 'Spa',         icon: 'spa'   },
+  { id: 'combo', label: 'Combo',       icon: 'combo' },
+  { id: 'event', label: 'Evento',      icon: 'event' },
+];
+
+export const PROFESSIONALS: Record<string, Professional[]> = {
+  s1: [
+    { id: 'p1', salonId: 's1', name: 'Helena Caldeira', role: 'Cabeleireira sênior',  rating: 5.0,  reviews: 312, photoSeed: 7, fav: true },
+    { id: 'p2', salonId: 's1', name: 'Bruna Saito',     role: 'Coloração',            rating: 4.9,  reviews: 188, photoSeed: 1 },
+    { id: 'p3', salonId: 's1', name: 'Carolina Reis',   role: 'Cortes & finalização', rating: 4.8,  reviews: 144, photoSeed: 3 },
+  ],
+  s2: [
+    { id: 'p4', salonId: 's2', name: 'Tatiana Bueno',   role: 'Hair stylist', rating: 4.9,  reviews: 421, photoSeed: 2 },
+    { id: 'p5', salonId: 's2', name: 'Yasmin Couto',    role: 'Manicure',     rating: 4.95, reviews: 612, photoSeed: 4 },
+  ],
+  s3: [
+    { id: 'p6', salonId: 's3', name: 'Mirella Tanaka',  role: 'Nail designer', rating: 5.0, reviews: 308, photoSeed: 4 },
+  ],
+  s4: [
+    { id: 'p7', salonId: 's4', name: 'Patrícia Vidal',  role: 'Esteticista',   rating: 4.9, reviews: 188, photoSeed: 5 },
+  ],
+  s5: [
+    { id: 'p8', salonId: 's5', name: 'Mel Andrade',     role: 'Brow artist',   rating: 4.8, reviews: 921, photoSeed: 6 },
+  ],
+};
+
+export const SERVICES: Record<string, Service[]> = {
+  s1: [
+    { id: 'sv1', salonId: 's1', cat: 'Cabelo', name: 'Corte feminino editorial', dur: 60,  price: 220, desc: 'Corte com consultoria de visagismo' },
+    { id: 'sv2', salonId: 's1', cat: 'Cabelo', name: 'Coloração loira',          dur: 180, price: 580, desc: 'Mechas, matização e finalização' },
+    { id: 'sv3', salonId: 's1', cat: 'Cabelo', name: 'Escova progressiva',       dur: 120, price: 420, desc: 'Selante orgânico, sem formol' },
+    { id: 'sv4', salonId: 's1', cat: 'Cabelo', name: 'Hidratação premium',       dur: 45,  price: 180 },
+    { id: 'sv5', salonId: 's1', cat: 'Cabelo', name: 'Penteado para evento',     dur: 60,  price: 280 },
+  ],
+  s2: [
+    { id: 'sv6',  salonId: 's2', cat: 'Combo',  name: 'Cabelo + Unhas (combo)', dur: 150, price: 320, desc: 'Atendimento simultâneo' },
+    { id: 'sv7',  salonId: 's2', cat: 'Cabelo', name: 'Escova modeladora',      dur: 50,  price: 110 },
+    { id: 'sv8',  salonId: 's2', cat: 'Unhas',  name: 'Manicure + pedicure',    dur: 90,  price: 140 },
+    { id: 'sv9',  salonId: 's2', cat: 'Unhas',  name: 'Esmaltação em gel',      dur: 70,  price: 95  },
+  ],
+  s3: [
+    { id: 'sv10', salonId: 's3', cat: 'Unhas',  name: 'Nail art autoral',       dur: 90,  price: 180 },
+    { id: 'sv11', salonId: 's3', cat: 'Unhas',  name: 'Alongamento em fibra',   dur: 120, price: 240 },
+  ],
+  s4: [
+    { id: 'sv12', salonId: 's4', cat: 'Estética', name: 'Limpeza de pele profunda', dur: 90, price: 280 },
+    { id: 'sv13', salonId: 's4', cat: 'Estética', name: 'Peeling químico',          dur: 60, price: 360 },
+  ],
+  s5: [
+    { id: 'sv14', salonId: 's5', cat: 'Sobrancelha', name: 'Design + henna', dur: 40, price: 65 },
+    { id: 'sv15', salonId: 's5', cat: 'Cílios',      name: 'Lash lifting',   dur: 60, price: 180 },
+  ],
+};
+
+export const BOOKINGS: Booking[] = [
+  {
+    id: 'b1', salonId: 's1',
+    salon: 'Casa Lavanda',
+    service: 'Corte editorial + Hidratação',
+    pro: 'Helena Caldeira',
+    date: 'Sex, 12 dez', time: '15:30',
+    status: 'confirmed',
+    price: 400,
+    photoSeed: 0,
+    daysAway: 3,
+    isReveillon: true,
+  },
+  {
+    id: 'b2', salonId: 's3',
+    salon: 'Mira Beauty',
+    service: 'Manicure em gel',
+    pro: 'Yasmin Couto',
+    date: 'Qui, 11 dez', time: '10:00',
+    status: 'confirmed',
+    price: 95,
+    photoSeed: 4,
+    daysAway: 2,
+  },
+  {
+    id: 'b3', salonId: 's2',
+    salon: 'Atelier Âmbar',
+    service: 'Cabelo + Unhas',
+    pro: 'Tatiana Bueno',
+    date: '24 nov · 14:00', time: '14:00',
+    status: 'past',
+    price: 320,
+    photoSeed: 2,
+    rated: true,
+    rating: 5,
+  },
+  {
+    id: 'b4', salonId: 's5',
+    salon: 'Studio Mel',
+    service: 'Design de sobrancelhas',
+    date: '08 nov · 16:30', time: '16:30',
+    status: 'past',
+    price: 65,
+    photoSeed: 6,
+    rated: false,
+  },
+];
+
+export const REVIEWS_BY_SALON: Record<string, Review[]> = {
+  s1: [
+    { name: 'Juliana M.', date: 'há 2 sem', rating: 5, text: 'Helena entendeu exatamente o que eu queria. Saí com o cabelo dos sonhos. Já marquei a próxima.', verified: true },
+    { name: 'Camila R.',  date: 'há 1 mês', rating: 5, text: 'Ambiente impecável, atendimento super atencioso. Vale cada centavo.' },
+    { name: 'Beatriz L.', date: 'há 1 mês', rating: 4, text: 'Coloração ficou ótima, só achei que demorou um pouco mais que o previsto.' },
+  ],
+};
+
+export const REVIEW_DEFAULT: Review[] = REVIEWS_BY_SALON.s1;
