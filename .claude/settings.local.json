@@ -3,7 +3,8 @@
     "allow": [
       "Bash(brew install:*)",
       "Bash(npm install *)",
-      "Bash(npm view *)"
+      "Bash(npm view *)",
+      "Bash(git -C /Users/ltcloud/Documents/Saloon log --oneline -10)"
     ]
   }
 }

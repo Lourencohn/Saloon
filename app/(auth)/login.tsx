@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { AuthField } from '@/components/AuthField';
 import { Btn } from '@/components/Btn';
 import { Icon } from '@/components/Icon';
+import { Logo } from '@/components/Logo';
 import { colors, fonts, radii } from '@/constants/tokens';
 import { useAuth } from '@/stores/auth';
 
@@ -61,16 +62,7 @@ export default function LoginScreen() {
         </Pressable>
 
         <View style={{ flex: 1, justifyContent: 'center', paddingVertical: 32 }}>
-          <Text style={{
-            fontFamily: fonts.sansBold,
-            fontSize: 11,
-            letterSpacing: 3,
-            color: colors.gold,
-            textTransform: 'uppercase',
-            marginBottom: 14,
-          }}>
-            Saloon
-          </Text>
+          <Logo width={108} style={{ marginBottom: 18, marginLeft: -8 }} />
 
           <Text style={{
             fontFamily: fonts.serif,

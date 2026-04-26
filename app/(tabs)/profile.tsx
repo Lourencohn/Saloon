@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 
 import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
+import { Logo } from '@/components/Logo';
 import { Photo } from '@/components/Photo';
 import { Pill } from '@/components/Pill';
 import { SectionTitle } from '@/components/SectionTitle';
@@ -251,14 +252,17 @@ export default function ProfileScreen() {
         </Pressable>
       </Card>
 
-      <Text style={{
-        textAlign: 'center', marginTop: 24,
-        fontFamily: fonts.serifItalic,
-        fontSize: 11, color: colors.textFaint,
-        letterSpacing: 0.4,
-      }}>
-        Saloon · v1.4.2
-      </Text>
+      <View style={{ alignItems: 'center', marginTop: 32, opacity: 0.55 }}>
+        <Logo width={96} />
+        <Text style={{
+          marginTop: 6,
+          fontFamily: fonts.serifItalic,
+          fontSize: 11, color: colors.textFaint,
+          letterSpacing: 0.4,
+        }}>
+          v1.4.2
+        </Text>
+      </View>
     </ScrollView>
   );
 }

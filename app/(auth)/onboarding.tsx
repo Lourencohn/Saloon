@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Btn } from '@/components/Btn';
 import { GradientOverlay } from '@/components/GradientOverlay';
 import { Icon } from '@/components/Icon';
+import { Logo } from '@/components/Logo';
 import { Photo } from '@/components/Photo';
 import { colors, fonts } from '@/constants/tokens';
 
@@ -39,16 +40,7 @@ export default function Onboarding() {
         paddingHorizontal: 28,
         justifyContent: 'flex-end',
       }}>
-        <Text style={{
-          fontFamily: fonts.sansBold,
-          fontSize: 11,
-          letterSpacing: 3,
-          color: colors.gold,
-          textTransform: 'uppercase',
-          marginBottom: 18,
-        }}>
-          Saloon
-        </Text>
+        <Logo width={132} style={{ marginBottom: 22, marginLeft: -10 }} />
 
         <Text style={{
           fontFamily: fonts.serif,

@@ -100,6 +100,17 @@ export const useAuth = create<AuthState>((set) => ({
     });
 
     if (error) return { ok: false, reason: translateAuthError(error.message) };
+
+    // Sem session = confirmação por e-mail está ativa no Supabase. Não logamos
+    // o usuário (não temos JWT, qualquer query falharia em silêncio); orientamos
+    // a confirmar o e-mail antes.
+    if (!data.session) {
+      return {
+        ok: false,
+        reason: 'Conta criada. Confirme seu e-mail para entrar (ou desative a confirmação no painel do Supabase).',
+      };
+    }
+
     if (data.user) {
       await upsertProfile(data.user.id, trimmedName, trimmedEmail);
       set({ user: await buildAuthUser(data.user.id, trimmedEmail) });
@@ -152,6 +163,15 @@ function hash(value: string): number {
 function translateAuthError(message: string): string {
   if (/invalid login credentials/i.test(message)) return 'E-mail ou senha incorretos.';
   if (/already registered|already exists/i.test(message)) return 'Este e-mail já está cadastrado.';
+  if (/email rate limit/i.test(message)) {
+    return 'Muitas tentativas em pouco tempo. Tente de novo em 1 hora ou desative a confirmação por e-mail no Supabase.';
+  }
+  if (/email not confirmed/i.test(message)) {
+    return 'E-mail ainda não confirmado. Cheque sua caixa de entrada (ou desative a confirmação no Supabase).';
+  }
+  if (/over_email_send_rate_limit/i.test(message)) {
+    return 'Limite de e-mails do Supabase atingido. Aguarde 1h ou configure SMTP próprio.';
+  }
   if (/password/i.test(message)) return 'A senha precisa ter ao menos 6 caracteres.';
   return message;
 }
