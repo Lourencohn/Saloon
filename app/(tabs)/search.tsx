@@ -14,6 +14,9 @@ import { SalonRow } from '@/components/SalonRow';
 import { Sheet } from '@/components/Sheet';
 import { CATEGORIES, SALONS } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
+import { useSalons } from '@/hooks/useSalons';
+import { useAuth } from '@/stores/auth';
 
 const QUICK_CHIPS = [
   'Disponível agora', 'Até 2 km', 'Combo', 'Aceita Pix', 'Aberto até 21h',
@@ -35,19 +38,30 @@ export default function SearchScreen() {
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [favs, setFavs] = useState<Record<string, boolean>>({ s1: true, s4: true });
+  const user = useAuth(s => s.user);
+  const { data } = useSalons();
+  const { data: favoriteIds = [] } = useFavorites(user?.id);
+  const toggleFavorite = useToggleFavorite();
+  const salons = data?.length ? data : SALONS;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return SALONS;
-    return SALONS.filter(s =>
+    const byText = !q ? salons : salons.filter(s =>
       s.name.toLowerCase().includes(q) ||
       s.neighborhood.toLowerCase().includes(q) ||
       s.tagline.toLowerCase().includes(q)
     );
-  }, [query]);
+    if (filters.cat === 'all') return byText;
+    return byText.filter(s => s.badges.some(b => b.toLowerCase().includes(filters.cat)));
+  }, [query, salons, filters.cat]);
 
-  const toggleFav = (id: string) =>
+  const isFav = (id: string) => favoriteIds.includes(id) || !!favs[id];
+  const toggleFav = (id: string) => {
+    if (user) {
+      toggleFavorite.mutate({ userId: user.id, salonId: id, favorite: favoriteIds.includes(id) });
+    }
     setFavs(f => ({ ...f, [id]: !f[id] }));
+  };
 
   const goSalon = (id: string) =>
     router.push(`/salon/${id}` as never);
@@ -163,7 +177,7 @@ export default function SearchScreen() {
             <SalonRow
               key={s.id}
               salon={s}
-              fav={!!favs[s.id]}
+              fav={isFav(s.id)}
               onFav={() => toggleFav(s.id)}
               onPress={() => goSalon(s.id)}
             />

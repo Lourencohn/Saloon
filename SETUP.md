@@ -32,9 +32,11 @@ npx expo start
 ## 4. Configure Supabase
 
 1. Crie projeto em https://supabase.com
-2. Cole o conteúdo de `supabase/schema.sql` no SQL Editor e rode
-3. Copie URL + anon key para `.env`
-4. Gere os tipos:
+2. Em Authentication → Providers, mantenha Email habilitado
+3. Cole o conteúdo de `supabase/schema.sql` no SQL Editor e rode
+4. Copie Project URL + anon public key para `.env`
+5. Inicie o app, crie uma conta e teste o fluxo Home → Salão → Agendamento → Agenda
+6. Opcionalmente, regenere os tipos após alterar o schema:
    ```bash
    npx supabase gen types typescript --project-id <id> > types/database.ts
    ```

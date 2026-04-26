@@ -1,16 +1,13 @@
-// stores/auth.ts — auth state persisted to AsyncStorage
-// Backend stub: when Supabase Auth is wired, replace `login` body with
-// supabase.auth.signInWithPassword and rehydrate `user` from session.
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// stores/auth.ts — Supabase Auth session mirrored into Zustand
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type AuthUser = {
   id: string;
   email: string;
   name: string;
   avatarSeed: number;
-  memberSince: string; // ISO
+  memberSince: string;
 };
 
 type AuthResult = { ok: true } | { ok: false; reason: string };
@@ -18,11 +15,125 @@ type AuthResult = { ok: true } | { ok: false; reason: string };
 type AuthState = {
   user: AuthUser | null;
   hydrated: boolean;
+  initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<AuthResult>;
   register: (name: string, email: string, password: string) => Promise<AuthResult>;
-  logout: () => void;
-  setHydrated: (v: boolean) => void;
+  logout: () => Promise<void>;
 };
+
+let initialized = false;
+
+export const useAuth = create<AuthState>((set) => ({
+  user: null,
+  hydrated: false,
+
+  initialize: async () => {
+    if (initialized) return;
+    initialized = true;
+
+    if (!isSupabaseConfigured()) {
+      set({ user: null, hydrated: true });
+      return;
+    }
+
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) {
+      set({ user: await buildAuthUser(data.session.user.id, data.session.user.email ?? null) });
+    }
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        set({ user: null, hydrated: true });
+        return;
+      }
+
+      buildAuthUser(session.user.id, session.user.email ?? null).then(user => {
+        set({ user, hydrated: true });
+      });
+    });
+
+    set(s => ({ ...s, hydrated: true }));
+  },
+
+  login: async (email, password) => {
+    const trimmed = email.trim().toLowerCase();
+    if (!isSupabaseConfigured()) {
+      return { ok: false, reason: 'Configure o .env do Supabase antes de entrar.' };
+    }
+    if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
+      return { ok: false, reason: 'E-mail inválido' };
+    }
+    if (password.length < 6) {
+      return { ok: false, reason: 'Senha precisa ter ao menos 6 caracteres' };
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: trimmed,
+      password,
+    });
+
+    if (error) return { ok: false, reason: translateAuthError(error.message) };
+    if (data.user) set({ user: await buildAuthUser(data.user.id, data.user.email ?? trimmed) });
+    return { ok: true };
+  },
+
+  register: async (name, email, password) => {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!isSupabaseConfigured()) {
+      return { ok: false, reason: 'Configure o .env do Supabase antes de criar conta.' };
+    }
+    if (trimmedName.length < 2) {
+      return { ok: false, reason: 'Conte-nos seu nome (ao menos 2 letras)' };
+    }
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      return { ok: false, reason: 'E-mail inválido' };
+    }
+    if (password.length < 6) {
+      return { ok: false, reason: 'Senha precisa ter ao menos 6 caracteres' };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: trimmedEmail,
+      password,
+      options: { data: { name: trimmedName } },
+    });
+
+    if (error) return { ok: false, reason: translateAuthError(error.message) };
+    if (data.user) {
+      await upsertProfile(data.user.id, trimmedName, trimmedEmail);
+      set({ user: await buildAuthUser(data.user.id, trimmedEmail) });
+    }
+    return { ok: true };
+  },
+
+  logout: async () => {
+    if (isSupabaseConfigured()) await supabase.auth.signOut();
+    set({ user: null });
+  },
+}));
+
+async function buildAuthUser(id: string, email: string | null): Promise<AuthUser> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('name,email,avatar_url,created_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  return {
+    id,
+    email: data?.email ?? email ?? '',
+    name: data?.name ?? deriveName(email ?? ''),
+    avatarSeed: hash(id),
+    memberSince: data?.created_at ?? new Date().toISOString(),
+  };
+}
+
+async function upsertProfile(id: string, name: string, email: string) {
+  await supabase
+    .from('profiles')
+    .upsert({ id, name, email }, { onConflict: 'id' });
+}
 
 function deriveName(email: string): string {
   const local = email.split('@')[0] ?? 'cliente';
@@ -34,70 +145,13 @@ function deriveName(email: string): string {
     .join(' ') || 'Cliente';
 }
 
-export const useAuth = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      hydrated: false,
-      setHydrated: (v) => set({ hydrated: v }),
+function hash(value: string): number {
+  return Array.from(value).reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 8;
+}
 
-      login: async (email, password) => {
-        const trimmed = email.trim().toLowerCase();
-        if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
-          return { ok: false, reason: 'E-mail inválido' };
-        }
-        if (password.length < 4) {
-          return { ok: false, reason: 'Senha precisa ter ao menos 4 caracteres' };
-        }
-        // Mock auth — replace with supabase.auth.signInWithPassword later.
-        await new Promise(r => setTimeout(r, 350));
-        set({
-          user: {
-            id: `u_${Date.now().toString(36)}`,
-            email: trimmed,
-            name: deriveName(trimmed),
-            avatarSeed: 3,
-            memberSince: new Date().toISOString(),
-          },
-        });
-        return { ok: true };
-      },
-
-      register: async (name, email, password) => {
-        const trimmedName = name.trim();
-        const trimmedEmail = email.trim().toLowerCase();
-        if (trimmedName.length < 2) {
-          return { ok: false, reason: 'Conte-nos seu nome (ao menos 2 letras)' };
-        }
-        if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-          return { ok: false, reason: 'E-mail inválido' };
-        }
-        if (password.length < 4) {
-          return { ok: false, reason: 'Senha precisa ter ao menos 4 caracteres' };
-        }
-        // Mock signup — replace with supabase.auth.signUp later.
-        await new Promise(r => setTimeout(r, 450));
-        set({
-          user: {
-            id: `u_${Date.now().toString(36)}`,
-            email: trimmedEmail,
-            name: trimmedName,
-            avatarSeed: Math.floor(Math.random() * 8),
-            memberSince: new Date().toISOString(),
-          },
-        });
-        return { ok: true };
-      },
-
-      logout: () => set({ user: null }),
-    }),
-    {
-      name: 'saloon-auth',
-      storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ user: s.user }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
-      },
-    },
-  ),
-);
+function translateAuthError(message: string): string {
+  if (/invalid login credentials/i.test(message)) return 'E-mail ou senha incorretos.';
+  if (/already registered|already exists/i.test(message)) return 'Este e-mail já está cadastrado.';
+  if (/password/i.test(message)) return 'A senha precisa ter ao menos 6 caracteres.';
+  return message;
+}

@@ -7,19 +7,28 @@ import {
   createClient,
   type SupabaseClient,
 } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
-let _client: SupabaseClient | null = null;
+let _client: SupabaseClient<Database> | null = null;
 
-function client(): SupabaseClient {
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+    ?? process.env.EXPO_PUBLIC_SUPABASE_KEY;
+  return !!url && !!anon && !url.includes('YOUR_PROJECT');
+}
+
+function client(): SupabaseClient<Database> {
   if (_client) return _client;
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon || url.includes('YOUR_PROJECT')) {
+  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+    ?? process.env.EXPO_PUBLIC_SUPABASE_KEY;
+  if (!isSupabaseConfigured()) {
     throw new Error(
       'Supabase env não configurado. Defina EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY no .env (ou em eas.json) antes de chamar supabase.*',
     );
   }
-  _client = createClient(url, anon, {
+  _client = createClient(url!, anon!, {
     auth: {
       storage: AsyncStorage,
       autoRefreshToken: true,
@@ -31,7 +40,7 @@ function client(): SupabaseClient {
 }
 
 // Proxy that constructs the real client on first property access.
-export const supabase = new Proxy({} as SupabaseClient, {
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(_, prop, receiver) {
     return Reflect.get(client(), prop, receiver);
   },

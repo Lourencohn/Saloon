@@ -12,6 +12,8 @@ import { Icon } from '@/components/Icon';
 import { Photo } from '@/components/Photo';
 import { Pill } from '@/components/Pill';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useBookings } from '@/hooks/useBookings';
+import { useAuth } from '@/stores/auth';
 import { useAgenda } from '@/stores/agenda';
 import type { Booking, IconName } from '@/types/salon';
 
@@ -23,7 +25,10 @@ export default function BookingsScreen() {
   const [tab, setTab] = useState<Tab>('upcoming');
   const [showYearEnd, setShowYearEnd] = useState(true);
 
-  const bookings = useAgenda(s => s.bookings);
+  const userId = useAuth(s => s.user?.id);
+  const fallbackBookings = useAgenda(s => s.bookings);
+  const { data } = useBookings(userId);
+  const bookings = data?.length ? data : fallbackBookings;
   const upcoming = useMemo(() => bookings.filter(b => b.status === 'confirmed'), [bookings]);
   const past = useMemo(() => bookings.filter(b => b.status === 'past'), [bookings]);
 

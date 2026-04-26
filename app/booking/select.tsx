@@ -12,19 +12,22 @@ import { Photo } from '@/components/Photo';
 import { ServiceRow } from '@/components/ServiceRow';
 import { PROFESSIONALS, SALONS, SERVICES } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useSalon } from '@/hooks/useSalons';
 import { useBooking } from '@/stores/booking';
 
 export default function SelectScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { salonId } = useLocalSearchParams<{ salonId: string }>();
+  const { data } = useSalon(salonId ?? '');
 
-  const salon = useMemo(
+  const fallbackSalon = useMemo(
     () => SALONS.find(s => s.id === salonId) ?? SALONS[0],
     [salonId],
   );
-  const services = SERVICES[salon.id] ?? [];
-  const pros = PROFESSIONALS[salon.id] ?? [];
+  const salon = data ?? fallbackSalon;
+  const services = data?.services ?? SERVICES[salon.id] ?? [];
+  const pros = data?.professionals ?? PROFESSIONALS[salon.id] ?? [];
 
   const setSalon = useBooking(s => s.setSalon);
   const serviceIds = useBooking(s => s.serviceIds);

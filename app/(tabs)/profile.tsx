@@ -11,6 +11,9 @@ import { Pill } from '@/components/Pill';
 import { SectionTitle } from '@/components/SectionTitle';
 import { SALONS } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useBookings } from '@/hooks/useBookings';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useSalons } from '@/hooks/useSalons';
 import { useAgenda } from '@/stores/agenda';
 import { useAuth } from '@/stores/auth';
 import type { IconName } from '@/types/salon';
@@ -29,7 +32,12 @@ export default function ProfileScreen() {
 
   const user = useAuth(s => s.user);
   const logout = useAuth(s => s.logout);
-  const bookings = useAgenda(s => s.bookings);
+  const fallbackBookings = useAgenda(s => s.bookings);
+  const { data: remoteBookings } = useBookings(user?.id);
+  const { data: remoteSalons } = useSalons();
+  const { data: favoriteIds = [] } = useFavorites(user?.id);
+  const bookings = remoteBookings?.length ? remoteBookings : fallbackBookings;
+  const salons = remoteSalons?.length ? remoteSalons : SALONS;
 
   const totalBookings = bookings.length;
   const totalInvested = bookings.reduce((sum, b) => sum + b.price, 0);
@@ -45,7 +53,9 @@ export default function ProfileScreen() {
   ];
 
   const memberLabel = formatMembership(user?.memberSince);
-  const favorites = SALONS.filter(s => s.favorite);
+  const favorites = favoriteIds.length
+    ? salons.filter(s => favoriteIds.includes(s.id))
+    : SALONS.filter(s => s.favorite);
 
   const goSalon = (id: string) => router.push(`/salon/${id}` as never);
 
@@ -55,7 +65,7 @@ export default function ProfileScreen() {
       'Você poderá entrar de novo a qualquer momento.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: logout },
+        { text: 'Sair', style: 'destructive', onPress: () => { void logout(); } },
       ],
     );
   };

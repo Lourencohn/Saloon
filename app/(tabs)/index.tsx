@@ -14,24 +14,36 @@ import { SectionTitle } from '@/components/SectionTitle';
 import { Btn } from '@/components/Btn';
 import { CATEGORIES, SALONS } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
+import { useSalons } from '@/hooks/useSalons';
 import { useAuth } from '@/stores/auth';
 import type { IconName, Salon } from '@/types/salon';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const userName = useAuth(s => s.user?.name);
+  const user = useAuth(s => s.user);
+  const userName = user?.name;
   const firstName = userName?.split(' ')[0] ?? 'visitante';
 
   const [cat, setCat] = useState<string>('all');
   const [favs, setFavs] = useState<Record<string, boolean>>({ s1: true, s4: true });
   const [showYearEnd, setShowYearEnd] = useState(true);
+  const { data } = useSalons();
+  const { data: favoriteIds = [] } = useFavorites(user?.id);
+  const toggleFavorite = useToggleFavorite();
+  const salons = data?.length ? data : SALONS;
 
-  const featured = SALONS[0];
-  const list = SALONS.slice(1);
+  const featured = salons[0];
+  const list = salons.slice(1);
 
-  const toggleFav = (id: string) =>
+  const isFav = (id: string) => favoriteIds.includes(id) || !!favs[id];
+  const toggleFav = (id: string) => {
+    if (user) {
+      toggleFavorite.mutate({ userId: user.id, salonId: id, favorite: favoriteIds.includes(id) });
+    }
     setFavs(f => ({ ...f, [id]: !f[id] }));
+  };
 
   const goSearch = () => router.push('/search' as never);
   const goSalon = (id: string) => router.push(`/salon/${id}` as never);
@@ -67,7 +79,7 @@ export default function HomeScreen() {
         </SectionTitle>
         <FeaturedCard
           salon={featured}
-          fav={!!favs[featured.id]}
+          fav={isFav(featured.id)}
           onFav={() => toggleFav(featured.id)}
           onPress={() => goSalon(featured.id)}
         />
@@ -80,7 +92,7 @@ export default function HomeScreen() {
             <SalonRow
               key={s.id}
               salon={s}
-              fav={!!favs[s.id]}
+              fav={isFav(s.id)}
               onFav={() => toggleFav(s.id)}
               onPress={() => goSalon(s.id)}
             />
@@ -442,4 +454,3 @@ function MetaItem({
     </View>
   );
 }
-

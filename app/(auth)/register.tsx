@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx — create account (mock for now)
+// app/(auth)/register.tsx — create account
 import { useState } from 'react';
 import {
   KeyboardAvoidingView, Platform, Pressable, ScrollView,
@@ -123,7 +123,7 @@ export default function RegisterScreen() {
               icon="diamond"
               value={password}
               onChangeText={t => { setPassword(t); setError(null); }}
-              placeholder="Mínimo 4 caracteres"
+              placeholder="Mínimo 6 caracteres"
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               textContentType="newPassword"

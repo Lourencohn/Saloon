@@ -12,6 +12,7 @@ import { Btn } from '@/components/Btn';
 import { Icon } from '@/components/Icon';
 import { SALONS } from '@/constants/mock';
 import { colors, fonts } from '@/constants/tokens';
+import { useSalon } from '@/hooks/useSalons';
 import { useAuth } from '@/stores/auth';
 import { useBooking } from '@/stores/booking';
 
@@ -27,11 +28,13 @@ export default function SuccessScreen() {
   const reset = useBooking(s => s.reset);
   const userName = useAuth(s => s.user?.name);
   const firstName = userName?.split(' ')[0] ?? 'tudo';
+  const { data } = useSalon(salonId ?? '');
 
-  const salon = useMemo(
+  const fallbackSalon = useMemo(
     () => SALONS.find(s => s.id === salonId) ?? SALONS[0],
     [salonId],
   );
+  const salon = data ?? fallbackSalon;
 
   const halo = useSharedValue(0);
   const checkScale = useSharedValue(0.3);

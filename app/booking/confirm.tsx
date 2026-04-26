@@ -15,9 +15,11 @@ import { SectionTitle } from '@/components/SectionTitle';
 import { Toggle } from '@/components/Toggle';
 import { PROFESSIONALS, SALONS, SERVICES } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
-import { useAgenda } from '@/stores/agenda';
+import { useCreateBooking } from '@/hooks/useBookings';
+import { useSalon } from '@/hooks/useSalons';
+import { useAuth } from '@/stores/auth';
 import { useBooking } from '@/stores/booking';
-import type { Booking, IconName } from '@/types/salon';
+import type { IconName } from '@/types/salon';
 
 const PAY_OPTIONS: { id: 'pix' | 'card' | 'at_salon'; icon: IconName; label: string; sub: string }[] = [
   { id: 'pix',      icon: 'pix',     label: 'Pix',                       sub: 'Confirmação imediata' },
@@ -32,13 +34,17 @@ export default function ConfirmScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { salonId } = useLocalSearchParams<{ salonId: string }>();
+  const user = useAuth(s => s.user);
+  const { data } = useSalon(salonId ?? '');
+  const createBooking = useCreateBooking();
 
-  const salon = useMemo(
+  const fallbackSalon = useMemo(
     () => SALONS.find(s => s.id === salonId) ?? SALONS[0],
     [salonId],
   );
-  const services = SERVICES[salon.id] ?? [];
-  const pros = PROFESSIONALS[salon.id] ?? [];
+  const salon = data ?? fallbackSalon;
+  const services = data?.services ?? SERVICES[salon.id] ?? [];
+  const pros = data?.professionals ?? PROFESSIONALS[salon.id] ?? [];
 
   const serviceIds = useBooking(s => s.serviceIds);
   const professionalId = useBooking(s => s.professionalId);
@@ -48,8 +54,8 @@ export default function ConfirmScreen() {
   const remind = useBooking(s => s.remind);
   const setRemind = useBooking(s => s.setRemind);
 
-  const addToAgenda = useAgenda(s => s.add);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const items = serviceIds.length
     ? services.filter(s => serviceIds.includes(s.id))
@@ -64,25 +70,32 @@ export default function ConfirmScreen() {
 
   const onConfirm = async () => {
     if (submitting) return;
+    if (!user) {
+      setError('Entre na sua conta para confirmar o agendamento.');
+      return;
+    }
+    if (!startsAt) {
+      setError('Escolha um horário antes de confirmar.');
+      return;
+    }
     setSubmitting(true);
-    // Simulate payment processing — Pix takes a beat, others slightly less.
-    await new Promise(r => setTimeout(r, paymentMethod === 'pix' ? 600 : 400));
-
-    const booking: Booking = {
-      id: `b_${Date.now().toString(36)}`,
-      salonId: salon.id,
-      salon: salon.name,
-      service: items.map(i => i.name).join(' + ') || 'Serviço',
-      pro: proObj?.name,
-      date: formatShortDate(startsAt),
-      time: extractTime(startsAt),
-      status: 'confirmed',
-      price: total,
-      photoSeed: salon.photoSeed,
-      daysAway: daysFromNow(startsAt),
-    };
-    addToAgenda(booking);
-    router.replace('/booking/success' as never);
+    setError(null);
+    try {
+      await createBooking.mutateAsync({
+        userId: user.id,
+        salonId: salon.id,
+        professionalId: professionalId ?? proObj?.id ?? null,
+        startsAt,
+        services: items,
+        paymentMethod: paymentMethod ?? 'pix',
+        remind,
+      });
+      router.replace('/booking/success' as never);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível confirmar o agendamento.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -248,6 +261,17 @@ export default function ConfirmScreen() {
           Cancelamento gratuito até 4h antes do horário.{'\n'}
           Ao confirmar, você aceita os termos do Saloon.
         </Text>
+        {error && (
+          <Text style={{
+            fontFamily: fonts.sansMedium,
+            fontSize: 12,
+            color: colors.rose,
+            textAlign: 'center',
+            marginTop: 14,
+          }}>
+            {error}
+          </Text>
+        )}
       </ScrollView>
 
       <View style={{

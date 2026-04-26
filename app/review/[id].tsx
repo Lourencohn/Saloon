@@ -12,6 +12,8 @@ import { Icon } from '@/components/Icon';
 import { Photo } from '@/components/Photo';
 import { BOOKINGS } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useBookings, useCreateReview } from '@/hooks/useBookings';
+import { useAuth } from '@/stores/auth';
 import { useAgenda } from '@/stores/agenda';
 
 const TAG_OPTIONS = [
@@ -29,27 +31,50 @@ export default function ReviewScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const user = useAuth(s => s.user);
+  const { data } = useBookings(user?.id);
+  const createReview = useCreateReview();
 
-  const bookings = useAgenda(s => s.bookings);
+  const fallbackBookings = useAgenda(s => s.bookings);
   const markRated = useAgenda(s => s.markRated);
 
   const booking = useMemo(
-    () => bookings.find(b => b.id === id) ?? BOOKINGS[3],
-    [id, bookings],
+    () => (data?.length ? data : fallbackBookings).find(b => b.id === id) ?? BOOKINGS[3],
+    [id, data, fallbackBookings],
   );
 
   const [rating, setRating] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
   const [text, setText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleTag = (t: string) =>
     setTags(s => (s.includes(t) ? s.filter(x => x !== t) : [...s, t]));
 
-  const onSubmit = () => {
-    if (rating > 0 && booking.id) {
-      markRated(booking.id, rating);
+  const onSubmit = async () => {
+    if (!rating || !booking.id || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      if (user && booking.salonId) {
+        await createReview.mutateAsync({
+          bookingId: booking.id,
+          userId: user.id,
+          salonId: booking.salonId,
+          rating,
+          tags,
+          comment: text,
+        });
+      } else {
+        markRated(booking.id, rating);
+      }
+      router.replace('/bookings' as never);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar sua avaliação.');
+    } finally {
+      setSubmitting(false);
     }
-    router.replace('/bookings' as never);
   };
 
   return (
@@ -170,6 +195,17 @@ export default function ReviewScreen() {
             />
           </>
         )}
+        {error && (
+          <Text style={{
+            fontFamily: fonts.sansMedium,
+            fontSize: 12,
+            color: colors.rose,
+            textAlign: 'center',
+            marginTop: 14,
+          }}>
+            {error}
+          </Text>
+        )}
       </ScrollView>
 
       <View style={{
@@ -183,10 +219,10 @@ export default function ReviewScreen() {
           variant="primary"
           size="lg"
           full
-          disabled={rating === 0}
+          disabled={rating === 0 || submitting}
           onPress={onSubmit}
         >
-          Enviar avaliação
+          {submitting ? 'Enviando…' : 'Enviar avaliação'}
         </Btn>
       </View>
     </View>

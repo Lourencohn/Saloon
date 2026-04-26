@@ -30,6 +30,11 @@ export default function RootLayout() {
   });
 
   const authHydrated = useAuth(s => s.hydrated);
+  const initializeAuth = useAuth(s => s.initialize);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   if (!fontsLoaded || !authHydrated) {
     return <View style={{ flex: 1, backgroundColor: colors.bg }} />;

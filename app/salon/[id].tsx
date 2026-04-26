@@ -15,6 +15,9 @@ import { Pill } from '@/components/Pill';
 import { ServiceRow } from '@/components/ServiceRow';
 import { PROFESSIONALS, REVIEW_DEFAULT, REVIEWS_BY_SALON, SALONS, SERVICES } from '@/constants/mock';
 import { colors, fonts, radii } from '@/constants/tokens';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
+import { useSalon } from '@/hooks/useSalons';
+import { useAuth } from '@/stores/auth';
 import { useBooking } from '@/stores/booking';
 import type { IconName, Professional, Review, Salon, Service } from '@/types/salon';
 
@@ -24,20 +27,26 @@ export default function SalonScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const user = useAuth(s => s.user);
   const setSalon = useBooking(s => s.setSalon);
   const toggleService = useBooking(s => s.toggleService);
+  const { data } = useSalon(id ?? '');
+  const { data: favoriteIds = [] } = useFavorites(user?.id);
+  const toggleFavorite = useToggleFavorite();
 
-  const salon = useMemo<Salon>(
+  const fallbackSalon = useMemo<Salon>(
     () => SALONS.find(s => s.id === id) ?? SALONS[0],
     [id],
   );
-  const services = SERVICES[salon.id] ?? [];
-  const pros = PROFESSIONALS[salon.id] ?? [];
-  const reviews = REVIEWS_BY_SALON[salon.id] ?? REVIEW_DEFAULT;
+  const salon = data ?? fallbackSalon;
+  const services = data?.services ?? SERVICES[salon.id] ?? [];
+  const pros = data?.professionals ?? PROFESSIONALS[salon.id] ?? [];
+  const reviews = data?.reviews?.length ? data.reviews : REVIEWS_BY_SALON[salon.id] ?? REVIEW_DEFAULT;
   const cats = useMemo(() => Array.from(new Set(services.map(s => s.cat))), [services]);
 
   const [tab, setTab] = useState<Tab>('servicos');
   const [fav, setFav] = useState(!!salon.favorite);
+  const favorite = favoriteIds.includes(salon.id) || fav;
 
   const goSelect = (presetServiceId?: string) => {
     setSalon(salon.id);
@@ -73,9 +82,14 @@ export default function SalonScreen() {
             <ChromeBtn icon="share" />
             <ChromeBtn
               icon="heart"
-              filled={fav}
-              color={fav ? colors.rose : colors.text}
-              onPress={() => setFav(f => !f)}
+              filled={favorite}
+              color={favorite ? colors.rose : colors.text}
+              onPress={() => {
+                if (user) {
+                  toggleFavorite.mutate({ userId: user.id, salonId: salon.id, favorite: favoriteIds.includes(salon.id) });
+                }
+                setFav(f => !f);
+              }}
             />
           </View>
         </View>

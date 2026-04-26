@@ -1,4 +1,4 @@
-// app/(auth)/login.tsx — email + password login (mock for now)
+// app/(auth)/login.tsx — email + password login
 import { useState } from 'react';
 import {
   KeyboardAvoidingView, Platform, Pressable, ScrollView,
