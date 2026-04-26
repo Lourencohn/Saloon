@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Saloon",
+    "slug": "saloon",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "saloon",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#15101A",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.saloon.app"
+    },
+    "android": {
+      "package": "com.saloon.app",
+      "adaptiveIcon": { "backgroundColor": "#15101A" }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-notifications",
+      "expo-location"
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}
